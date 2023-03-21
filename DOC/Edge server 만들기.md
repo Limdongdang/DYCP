@@ -112,26 +112,26 @@ http://[ip address]/index.html
 ```
 ## json 파일을 php로 변환 코드
 > array 배열을 출력 또는 파일에 저장 가능한 문자열로 변환
-```
+```php
 $s = json_encode(array("Peter" => 35, "Ben" => 37, "Joe" => 43))
        string'{"Peter":35, "Ben":37, "Joe":43}'
 ```  
 > 문자열 json 자료를 php 배열로 만듦
-```
+```php
 $s = json_decode('{"Peter":35, "Ben":37, "Joe":43}', true)
        array("Peter":35, "Ben":37, "Joe":43)
 $j["Peter"] == 35
 ```
 ## json 파일을 js로 변환 코드
 > array 배열을 출력 또는 파일에 저장가능한 문자로 변경
-```
+```php
 s = JSON_stringify({"Peter":35, "Ben":37, "Joe":43})
        string'{"Peter":35, "Ben":37, "Joe":43}'
 ```
 > 문자열 json 자료를 js 오브젝트로 만듦
-```
+```php
 j = JSON_parse('{"Peter":35, "Ben":37, "Joe":43}', true)
-       object("Peter":35, "Ben":37, "Joe":43)
+       //object("Peter":35, "Ben":37, "Joe":43)
 j["Peter"] == j.Peter == 35
 ```
 ## ajax 방식 문답 구조> 
