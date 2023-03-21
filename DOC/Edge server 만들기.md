@@ -96,14 +96,44 @@ http://[ip address]/index.html
 
 ## json 파일
 > 이름으로 데이터를 구분한 파일, 객체형 정보 저장에 용이하다.     
-> 
-![image](https://user-images.githubusercontent.com/50188317/226593071-e445a2c5-81da-4ac7-8700-2f738aef8930.png)
-
+```json
+{
+  "name": "John",
+  "age": 30,
+  "isMarried": false,
+  "hobbies": ["reading", "traveling"],
+  "address": {
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "zip": "10001"
+  }
+}
+```
 ## json 파일을 php로 변환 코드
-![image](https://user-images.githubusercontent.com/50188317/226593327-008ad7a2-c8f2-485c-b3f2-e13bae2e36da.png)
+> array 배열을 출력 또는 파일에 저장 가능한 문자열로 변환
+```
+$s = json_encode(array("Peter" => 35, "Ben" => 37, "Joe" => 43))
+       string'{"Peter":35, "Ben":37, "Joe":43}'
+```  
+> 문자열 json 자료를 php 배열로 만듦
+```
+$s = json_decode('{"Peter":35, "Ben":37, "Joe":43}', true)
+       array("Peter":35, "Ben":37, "Joe":43)
+$j["Peter"] == 35
+```
 ## json 파일을 js로 변환 코드
-![image](https://user-images.githubusercontent.com/50188317/226593436-1ee0c3b0-12c3-4945-b0a0-44d7e3a37913.png)
-
+> array 배열을 출력 또는 파일에 저장가능한 문자로 변경
+```
+s = JSON_stringify({"Peter":35, "Ben":37, "Joe":43})
+       string'{"Peter":35, "Ben":37, "Joe":43}'
+```
+> 문자열 json 자료를 js 오브젝트로 만듦
+```
+j = JSON_parse('{"Peter":35, "Ben":37, "Joe":43}', true)
+       object("Peter":35, "Ben":37, "Joe":43)
+j["Peter"] == j.Peter == 35
+```
 ## ajax 방식 문답 구조> 
 > html 의 form 태그 대신 div 태그를 사용하여 표시한다.
 > XMLHttpRequest를 사용하여 서버 호출
