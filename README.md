@@ -6,12 +6,12 @@
 ![image](https://github.com/Limdongdang/DYCP/assets/50188317/7b6324e8-2186-40db-97b0-7d5e95e476fe)
 ### 접속 주소 url : http://125.188.5.149:8797/iot/sht_register.html
 ## ID, NAME 지정 방법
-ID 는 중복 방지를 위하여 학번으로 입력    
+ID 는 중복 방지를 위하여 닉네임 + 학번으로 입력    
 NAME은 원하는 이름 + (학번 끝자리 2자리) 입력  
 **예시)**
 | ID       | NAME         |
 |----------|--------------|
-| 20190797 | 내 집(97)    |
+| Dong20190797 | 내 집(97)    |
 ## url, graph 검증
 **URL 검증:**
 - url로 `current` 요청을 보내서 온도값과 습도값을 확인함 
@@ -25,7 +25,8 @@ NAME은 원하는 이름 + (학번 끝자리 2자리) 입력
 - Graph: `http://본인주소/iot/pygraph.png`
 ## 정상 동작 검증
 요청을 기다리고 응답이 완료되면 apikey 반환과 팝업과 함께 등록이 완료됨
-![image](https://github.com/Limdongdang/DYCP/assets/50188317/299d9d3d-5bd6-4868-abad-a08d602f3bf4)
+![image](https://github.com/Limdongdang/DYCP/assets/50188317/4014e5e0-68b9-4e26-bc62-e328f0d75898)
+
 
 ## 위도 경도 참고 사이트
 https://jusoga.com/      
