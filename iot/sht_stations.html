@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./anhive.table.lite.css" type="text/css">
+    <script src="./anhive.table.lite.js"></script>
+    <title>Contacts</title>
+<style>
+</style>
+</head>
+<body style="background-color:white;">
+<div style = "text-align:center;">
+    <h2 id="title">외부 수집 시스템 관리</h2>
+</div>
+
+<div id='measure'  style="background-color:#eef;">
+    <hr>
+    <div class="table_control">
+         <div style="float: left!important;margin:0px 10px 5px 10px;" >
+            갯수 <input id='count' type = "number" 
+                                    style="width:3em" value=20 > 
+         </div>
+        <div style="float: right!important;margin:0px 10px 5px 10px;">
+            <input type="button" value="추가" onclick="new_row('table_station')"/>
+            <input type="button" value="조회" onclick="list_station();"/>
+            <input type="button" value="저장" onclick="update_list();">
+
+            <input id="invisible_buttons" onchange="show_buttons(this);" type="checkbox"> 버튼 보이기
+        </div>
+    </div>
+    <div id='station_status' style="">
+        <table id="table_station" style="width:100%" >
+            <tr style=''>
+                <th class='keycolume         '>API-KEY</th>
+                <th class='keycolume         '>ID</th>
+                <th class='keycolume         '>명칭</th>
+                <th class='keycolume         '>주소</th>
+                <th class='keycolume         '>위도</th>
+                <th class='keycolume         '>경도</th>
+                <th class='keycolume         '>URL</th>
+                <th class='keycolume         '>GRAPH</th>
+                <th class='keycolume         '>관리</th>
+            </tr>
+            <tr data-form="sample"      style='display:none;'>
+                <td data-id="apikey"    class='data-text'></td>
+                <td data-id="id"        class='data-text enablewrite'></td>
+                <td data-id="name"      class='data-text enablewrite'></td>
+                <td data-id="address"   class='data-text enablewrite'></td>
+                <td data-id="latitude"  class='data-text enablewrite'></td>
+                <td data-id="longitude" class='data-text enablewrite'></td>
+                <td data-id="url"       class='data-text enablewrite'></td>
+                <td data-id="graph"       class='data-text enablewrite'></td>
+                <td style="padding:0px;">
+                    <span name="station_manage_button" style="display:none;">
+                        <input type="button" value="삭제" onclick="remove_station(this);" style="margin:0px;">
+                        <input type="button" value="저장" onclick="update_station(this);" style="margin:0px;">
+                        <input type="button" value="수집" onclick="read_station(this);" style="margin:0px;">
+                    </span>
+                </td>                
+             </tr>
+        </table>
+    </div>
+    <br>
+</div>
+
+<script>
+    var API_php="sht_pdo.php"
+
+    var _ = function(id) {
+        return  document.getElementById(id)
+    }
+
+    var POST = function(api, data, func ){
+        var request = new XMLHttpRequest();
+        
+        request.onreadystatechange = function(){
+            if(request.readyState == 4){
+                try {
+                    //console.log(request.response);
+                    var resp = JSON.parse(request.response);
+                } catch (e){
+                    resp = 'req error: [' + JSON.stringify(request.responseText) + ']'
+                    console.log( resp );
+                    alert(resp.data);
+                    return;
+                }
+                console.log(JSON.stringify(request.response));
+                func(resp);
+            }
+        };
+        request.open('POST', api);
+        request.send(data);
+        return request;
+    }
+
+    var list_station = function(){
+        var data = new FormData();
+        data.append('func', 'list_station');
+        data.append('count', _('count').value);
+        
+        var table_name = 'table_station'
+        reset_table(table_name)
+        POST('sht_pdo.php', data, function (resp) {
+            if (resp.indexOf('Key is not Available')>=0) {
+                alert(resp);
+                return
+            }
+            fill_table(table_name, resp)
+        });
+    };
+    var update_list = function(){
+        if (!confirm("정보를 수정합니다.")) return; //확인
+
+        var data = new FormData();
+        data.append('func', 'update_station');
+        data.append('json', tabletojson('table_station'));
+        
+        POST(API_php, data, function (resp) {
+            if ( resp.indexOf('insert') < 0)
+                alert(JSON.stringify( resp))
+            list_station();
+        });
+    };
+
+    var update_station = function(obj){
+        if (!confirm("정보를 수정합니다.")) return; //확인
+
+        var data = new FormData();
+        data.append('func', 'update_station');
+        data.append('json', rowtojson(obj));
+        
+        POST(API_php, data, function (resp) {
+            if (resp.indexOf('insert') < 0)
+                alert(JSON.stringify( resp))
+            list_station();
+        });
+    };
+
+    var remove_station = function(obj){
+        if (!confirm("정보를 삭제합니다.")) return; //확인
+
+        var data = new FormData();
+        data.append('func', 'delete_station');
+        
+        apikey = get_celldataintable('apikey', obj, 'TR')
+        data.append('apikey', apikey);
+        
+        POST('sht_pdo.php', data, function (resp) {
+            list_station();
+        });
+    };
+
+    var show_buttons = function() {
+        display_set = ""
+        if (_("invisible_buttons").checked == true)
+            display_set = ""
+        else 
+            display_set = "none"
+        objs = document.getElementsByName("station_manage_button")
+        for (i=0; i< objs.length; i++) {
+            objs[i].style.display = display_set;
+        }
+    }
+
+    var read_station = function(obj){
+        if (!confirm("정보를 수집합니다.")) return; //확인
+
+        var data = new FormData();
+        data.append('func', 'collect_station');
+        
+        apikey = get_celldataintable('apikey', obj, 'TR')
+        data.append('apikey', apikey);
+        
+        POST('sht_pdo.php', data, function (resp) {
+            list_station();
+        });
+    };
+
+    list_station();
+    
+</script>
+
+</body>
+</html>

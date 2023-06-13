@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>공개 GIS 예제</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+</head>
+<body>
+
+<div id="mapid" style="height: 500px;"></div>
+
+<script>
+    var mymap = L.map('mapid').setView([37.5665, 126.9780], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+        tileSize: 512,
+        zoomOffset: -1
+    }).addTo(mymap);
+
+    var marker = L.marker([37.5665, 126.9780]).addTo(mymap);
+    marker.bindPopup("<b>서울 시청</b><br>서울특별시 중구 세종대로 110").openPopup();
+</script>
+
+</body>
+</html>

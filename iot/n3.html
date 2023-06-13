@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>공개 GIS 예제</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
+</head>
+<body>
+
+<div id="mapid" style="height: 1000px;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+<script src="your-script.js"></script>
+<script>
+    var mymap = new Map('mapid', [37.500492, 126.867732], 12);
+	
+    var marker1 = mymap.addMarker([37.5665, 126.9780], "서울 시청", "서울특별시 중구 세종대로 110");
+    var marker2 = mymap.addMarker([37.520555375455, 127.11505129348], "올림픽 경기장", "서울특별시 송파구 올림픽로 424");
+    var marker3 = mymap.addMarker([37.500492, 126.867732], "동양미래대학교", "서울특별시 서대문구 거북골로 29");
+	
+	
+	marker1.setPopupContent("<b>서울 시청</b>"+"<br>온도:24,습도:55%");
+	marker2.setPopupContent("<b>올림픽 경기장</b>"+"<br>온도:24,습도:55%");
+	marker3.setPopupContent("<b>동양미래대학교</b>"+"<br>온도:24,습도:55%");
+</script>
+
+</body>
+</html>

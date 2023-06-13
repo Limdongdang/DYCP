@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./anhive.table.lite.css" type="text/css">
+    <script src="./anhive.table.lite.js"></script>
+    <title>Contacts</title>
+<style>
+</style>
+</head>
+<body style="background-color:white;">
+<div style = "text-align:center;" id = "divid">
+    <h2 id="title">외부 수집 시스템 등록</h2>
+
+ID    <input id='id'        type = "text" style="width:23em" > <br>
+명칭  <input id='name'      type = "text" style="width:23em" > <br>
+주소  <input id='address'   type = "text" style="width:23em" > <br>
+위도  <input id='latitude'  type = "text" style="width:23em" > <br>
+경도  <input id='longitude' type = "text" style="width:23em" > <br>
+URL   <input id='url'       type = "text" style="width:23em" > <br>
+GRAPH <input id='graph'     type = "text" style="width:23em" > <br>
+
+
+<input type="button" value="등록" onclick="update_list();">
+<br><br>
+<div id='result'> ID: ___________ APIKEY: ______________ </div><br>
+<div id='result_temp'></div><br>
+<div id='information'></div><br>
+
+    <script>
+        var POST = function(api, data, func ){
+        var request = new XMLHttpRequest();
+        
+        request.onreadystatechange = function(){
+            if(request.readyState == 4){
+                try {
+                    //console.log(request.response);
+                    var resp = JSON.parse(request.response);
+                } catch (e){
+                    resp = 'req error: [' + JSON.stringify(request.responseText) + ']'
+                    console.log(resp);
+                    alert(resp.data);
+                    return;
+                }
+                console.log(JSON.stringify(request.response));
+                func(resp);
+            }
+        };
+
+        request.open('POST', api);
+        try{
+            request.send(data);
+        }catch{
+            alert("오류")
+            return;
+        }
+        return request;
+        };
+
+        var update_list = function(){
+        if (!confirm("시스템을 등록합니다.")) return; //확인
+        
+        if(!validinput()){
+            return;
+        }
+        var jsonData = divtojson('divid');
+        jsonData[0].apikey = "";
+        
+        var informationDiv = document.getElementById('information');
+        informationDiv.innerHTML = '입력하신 graph url 주소로 이미지를 요청중입니다 잠시만 기다려 주세요';
+        get_THdata(jsonData[0].url)
+            .then(function() {
+                // 응답이 정상적으로 처리된 경우에 실행될 코드
+                // 이 부분에서 원하는 동작을 수행할 수 있습니다.
+                // 비동기 서버에 GET 요청을 통해 URL 유효한지 확인
+                fetch("sht_pdo.php?func=checkimgurl&imgurl=" + encodeURIComponent(jsonData[0].graph))
+                    .then(function(response) {
+                        if (response.ok) {
+                        // 응답이 성공적인 경우
+                            
+                            return response.json(); // JSON 형태의 응답 데이터를 추출하여 반환
+                        } else {
+                            throw new Error('이미지 URL 요청 실패');
+                        }
+                    })
+                    .then(function(data) {
+                        // 응답 데이터를 이용하여 추가 작업 수행
+                        console.log(data); // 응답 데이터 출력
+                        if(data){
+                            var data = new FormData();
+                            data.append('func', 'update_station');
+                            data.append('json', JSON.stringify(jsonData));
+                            POST("sht_pdo.php", data, function (resp) {
+                                if ( resp.indexOf('insert') < 0)
+                                    alert(JSON.stringify( resp))
+                            });;
+                            get_APIkey(jsonData[0].id)
+                            get_Information(jsonData[0].id)
+                            alert("등록성공했습니다!")
+                        }else{
+                            alert("유효한 이미지 URL 형식이 아닙니다. 올바른 URL을 입력해주세요.")
+                            informationDiv.innerHTML = '유효한 이미지 URL 형식이 아닙니다. 올바른 URL을 입력해주세요.';
+                        }
+                    })
+                    .catch(function(error) {
+                        // 요청 실패 또는 오류 발생 시 처리
+                        console.log('Error:', error);
+                    });
+            })
+            .catch(function(error) {
+                // 오류가 발생한 경우에 실행될 코드
+                alert(error.message);
+                return;
+            });
+        
+        };
+
+        var get_APIkey = function(id){
+            var data = new FormData();
+            var resultDiv = document.getElementById('result');
+            data.append('func', 'get_APIkey');
+            data.append('id', id);
+
+            POST("sht_pdo.php", data, function (resp) {
+            resultDiv.innerHTML = 'ID: ' + id + ' APIKEY: ' + resp['apikey'];
+        });
+        };
+
+        var get_Information = function(id){
+            var data = new FormData();
+            var informationDiv = document.getElementById('information');
+            data.append('func', 'get_Information');
+            data.append('id', id);
+            informationDiv.innerHTML = '';
+            POST("sht_pdo.php", data, function (resp) {
+            var img = document.createElement('img');
+            img.src = resp['graph'];
+            informationDiv.appendChild(img);
+        });
+        };
+
+        var get_THdata = function(url) {
+            return new Promise(function(resolve, reject) {
+                var data = new FormData();
+                var result_tempDIV = document.getElementById('result_temp');
+                data.append('func', 'current');
+                result_tempDIV.innerHTML = '입력하신 url에 요청중입니다 잠시만 기다려주세요';
+                
+                fetch(url, {
+                method: 'POST',
+                body: data
+                })
+                .then(function(response) {
+                    if (response.ok) {
+                    return response.json();
+                    } else {
+                    throw new Error('URL 요청 실패');
+                    }
+                })
+                .then(function(resp) {
+
+                    if (resp[0].temp) {
+                    result_tempDIV.innerHTML = '온도: ' + resp[0].temp + ' 습도: ' + resp[0].humi;
+                    resolve();
+                    } else {
+                    reject(new Error("입력한 URL의 응답이 잘못되었습니다. URL을 다시 입력해주세요."));
+                    }
+                })
+                .catch(function(error) {
+                    console.log('Error:', error);
+                    result_tempDIV.innerHTML = 'URL 요청 중 오류가 발생했습니다. URL을 다시 확인해주세요.';
+                    reject(new Error("URL 요청 중 오류가 발생했습니다. URL을 다시 확인해주세요."));
+                });
+            });
+        };
+
+        var validinput = function(){
+            var idInput = document.getElementById('id');
+            var nameInput = document.getElementById('name');
+            var addressInput = document.getElementById('address');
+            var latitudeInput = document.getElementById('latitude');
+            var longitudeInput = document.getElementById('longitude');
+            var urlInput = document.getElementById('url');
+            var graphInput = document.getElementById('graph');
+
+            var url = urlInput.value.trim();
+            if (
+                idInput.value.trim() === '' ||
+                nameInput.value.trim() === '' ||
+                addressInput.value.trim() === '' ||
+                latitudeInput.value.trim() === '' ||
+                longitudeInput.value.trim() === '' ||
+                urlInput.value.trim() === '' ||
+                graphInput.value.trim() === ''
+            ) {
+                var missingFields = [];
+
+                if (idInput.value.trim() === '') {
+                missingFields.push('ID');
+                }
+                if (nameInput.value.trim() === '') {
+                missingFields.push('명칭');
+                }
+                if (addressInput.value.trim() === '') {
+                missingFields.push('주소');
+                }
+                if (latitudeInput.value.trim() === '') {
+                missingFields.push('위도');
+                }
+                if (longitudeInput.value.trim() === '') {
+                missingFields.push('경도');
+                }
+                if (urlInput.value.trim() === '') {
+                missingFields.push('URL');
+                }
+                if (graphInput.value.trim() === '') {
+                missingFields.push('GRAPH');
+                }
+                
+                var errorMessage = '다음 필드를 입력해주세요: ' + missingFields.join(', ');
+                alert(errorMessage);
+                return false;
+            }
+            if(!validurl(url)){
+                alert("유효하지 않은 URL 형식입니다.")
+                return false;
+            }
+            return true;
+        }
+
+        function validurl(url){
+            try {
+                new URL(url);
+                return true; // 유효한 URL 형식입니다.
+            } catch (error) {
+                return false; // 유효하지 않은 URL 형식입니다.
+            }
+        }
+
+        
+        
+    </script>
+</div>
+</body>
+</html>

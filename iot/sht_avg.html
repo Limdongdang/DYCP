@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./anhive.table.lite.css" type="text/css">
+    <script src="./anhive.table.lite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Graph</title>
+<style>
+</style>
+</head>
+<body style="background-color:white;">
+<div style = "text-align:center;">
+    <h2 id="title">로그 현황</h2>
+</div>
+
+<div id='measure'"  style="background-color:#eef;">
+    <hr>
+    <div class="table_control">
+         <div style="float: left!important;margin:0px 10px 5px 10px;" >
+            기간 <input id='date_begin' type="text" style="width:5em" value=0 >
+             - <input id='date_end' type="text" style="width:5em" value=0 >
+            주기 <input id='interval' type="number" style="width:5em" value=0 >초
+         </div>
+        <div style="float: right!important;margin:0px 10px 5px 10px;">
+            <input type="button" value="조회" onclick="list_log();"/>
+        </div>
+    </div>
+    <div id='sensor_status' style="">
+        <canvas id="myLineChart"></canvas>
+    </div>
+    <br>
+</div>
+
+<script>
+    var API_php="sht_pdo.php"
+
+    var _ = function(id) {
+        return  document.getElementById(id)
+    }
+
+    Date.prototype.yyyymmdd = function() {
+      var mm = this.getMonth() + 1 // getMonth() is zero-based
+      var dd = this.getDate();
+      return [this.getFullYear(),
+              (mm>9 ?'' : '0') + mm,
+              (dd>9 ?'' : '0') + dd
+             ].join('');
+    };
+    var date = new Date();
+    _('date_begin').value=date.yyyymmdd()
+    _('date_end').value=date.yyyymmdd()
+    _('interval').value=300
+
+    var _ = function(objid) {
+        return  document.getElementById(objid)
+    }
+
+    var POST = function(api, data, func ){
+        var request = new XMLHttpRequest();
+
+        request.onreadystatechange = function(){
+            if(request.readyState == 4){
+                try {
+                    //console.log(request.response);
+                    var resp = JSON.parse(request.response);
+                } catch (e){
+                    resp = 'req error: [' + JSON.stringify(request.responseText) + ']'
+                    console.log( resp );
+                    alert(resp.data);
+                    return;
+                }
+                //console.log(JSON.stringify(request.response));
+                func(resp);
+            }
+        };
+        request.open('POST', api);
+        request.send(data);
+        return request;
+    }
+
+    class LineGraph {
+
+        constructor(canvasId) {
+            this.ctx = document.getElementById(canvasId).getContext('2d');
+            this.chart = null;
+        }
+
+        draw(data, options) {
+            if (this.chart) {
+                this.chart.destroy();
+            }
+
+            this.chart = new Chart(this.ctx, {
+                type: 'line',
+                data: data,
+                options: options,
+            });
+        }
+
+        update(newData) {
+            this.chart.data.labels = newData.labels;
+            this.chart.data.datasets = newData.datasets;
+            this.chart.update();
+        }
+
+    }
+
+    const lineGraph = new LineGraph('myLineChart');
+
+    var initialData = {
+        labels: [],
+        datasets: [
+            {
+                label: 'Temperature',
+                data: [],
+                fill: false,
+                borderColor: 'rgb(0, 0, 255)',
+                tension: 0.1,
+            },
+            {
+                label: 'Humidity',
+                data: [],
+                fill: false,
+                borderColor: 'rgb(255, 0, 0)',
+                tension: 0.1,
+            },
+        ],
+    };
+
+    var list_log = function(){
+        var data = new FormData();
+        data.append('func', 'average');
+        data.append('date_begin', _('date_begin').value);
+        data.append('date_end', _('date_end').value);
+        data.append('interval', _('interval').value);
+        
+        POST('sht_pdo.php', data, function (resp) {
+
+            //초기화
+            rows = resp
+            initialData.labels=[]
+            initialData.datasets[0].data=[]
+            initialData.datasets[1].data=[]
+
+            ymax = Math.max(rows[0]['temp'],rows[0]['humi'])
+            ymin = Math.min(rows[0]['temp'],rows[0]['humi'])
+            for (ui=0;ui<rows.length;ui++) {
+                initialData.labels.push(rows[ui]['time'])
+                initialData.datasets[0].data.push(rows[ui]['temp'])
+                initialData.datasets[1].data.push(rows[ui]['humi'])
+                ymax = Math.max(rows[ui]['temp'],rows[ui]['humi'],ymax)
+                ymin = Math.min(rows[ui]['temp'],rows[ui]['humi'],ymin)
+            }
+
+            var options = {
+                scales: {
+                    y: {
+                        suggestedMin: ymin,
+                        suggestedMax: ymax
+                    },
+                },
+            };
+
+
+            lineGraph.draw(initialData, options);
+
+        });
+        
+    };
+
+    list_log();
+
+</script>
+
+</body>
+</html>

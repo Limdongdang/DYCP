@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>공개 GIS 예제</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
+</head>
+<body>
+
+<div id="mapid" style="height: 500px;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+<script src="your-script.js"></script>
+<script>
+    var mymap = new Map('mapid', [37.5665, 126.9780], 13);
+    mymap.addMarker([37.5665, 126.9780], "서울 시청", "서울특별시 중구 세종대로 110");
+</script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head>
+    <title>공개 GIS 예제</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
+    <style>
+    </style>
+</head>
+<body style="height:100%;">
+    <div class="table_control" style="width:100%">
+         <div style="float: left!important;margin:0px 10px 5px 10px;" >
+            건너뛰기 <input id='jumpto' type="number" style="width:5em" value=0 >
+            대상건 <input id='count' type="number" style="width:5em" value=100 >
+            키워드 <input id='search' type="text" style="width:5em" value="" >
+         </div>
+        <div style="float: right!important;margin:0px 10px 5px 10px;">
+            <input type="button" value="조회" onclick="gislocations();"/>
+        </div>
+        <div id="map-title">Your Map Info</div>
+    </div><br>
+    
+    <div id="mapid" style="height:85%;style="width:100%"">
+    </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+<script>
+
+    var _ = function(id) {
+        return  document.getElementById(id)
+    }
+
+    class Map {
+        constructor(elementId, centerCoords, zoomLevel) {
+            this.map = L.map(elementId).setView(centerCoords, zoomLevel);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(this.map);
+        }
+
+        addMarker(coords, title, description) {
+            var marker = L.marker(coords).addTo(this.map);
+            marker.bindPopup("<b>" + title + "</b><br>" + description).openPopup();
+            return marker;
+        }
+
+        setCenter() {
+            //alert(this.map.getBounds().getCenter())
+            this.map.setZoomAround(this.map.getBounds().getCenter(), 15, L.map.animate)
+        }
+    }
+
+    var mymap = new Map('mapid', [37.0,127.0], 14);
+    var myMarkers = {}
+
+    var start_time = Date.now();
+
+    var gislocations = function () {
+        start_time = Date.now();
+        var data = new FormData();
+        data.append('func'  , 'list_station');
+        data.append('jumpto', _("jumpto").value);
+        data.append('count' , _("count").value);
+        data.append('key'   , _("search").value);
+        
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+            if(request.readyState == 4) {
+                var resp
+                try {
+                    resp = JSON.parse(request.response);
+                } catch (e) {
+                    resp = request.response
+                           +' error:Unknown error occurred'
+                }
+                console.log(resp)
+                locations = resp
+                locations.forEach(location => {
+                    const date = new Date();
+                    marker = mymap.addMarker([location.latitude, location.longitude],
+                                                location.name,
+                                                location.address);
+                    marker.setPopupContent("<b>"+location.name+"</b><br>"
+                            +location.address+"<br>"
+                            +date.toLocaleString('ko-kr')+"<br>");
+
+                    myMarkers[location.id] = {"marker":marker, "info":location}
+                })
+                //mymap.setCenter();
+                _("map-title").innerHTML = "Loading time: " + (Date.now() - start_time) +" ms";
+                //start update
+                //setInterval(current, 5000);
+                setInterval(function() {
+                    current(resp);
+                }, 5000);
+            }
+        };
+        request.open('POST', "poc_pdo.php" );
+        request.send(data);
+    }
+
+    var current = function (phpurl) {
+        start_time = Date.now();
+        var data = new FormData();
+        data.append('func', 'current');
+        
+        console.log(phpurl)
+        for (const [key, value] of Object.entries(phpurl)) {
+            console.log(key + ':', value.url);
+        }
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+            if(request.readyState == 4) {
+                var resp
+                try {
+                    resp = JSON.parse(request.response);
+                } catch (e) {
+                    resp = request.response
+                           +' error:Unknown error occurred'
+                }
+                const date = new Date();
+                for (const [key, mymarker] of Object.entries(myMarkers)) {
+                    info = mymarker.info
+                     mymarker.marker.setPopupContent("<b>"+info.name+"</b><br>"
+                        +date.toLocaleString('ko-kr')+"<br>온도:"
+                        +resp[0].temp+", 습도:"+resp[0].humi+"%"
+                        +"<img width='300px' src='"+info.graph+"?id="+info.id+"'>")
+                }
+                _("map-title").innerHTML = "Update time: " + (Date.now() - start_time) +" ms";
+            }
+        };
+        request.open('POST', "poc_pdo.php" );
+        request.send(data);
+    }
+    
+</script>
+</body>
+</html>
